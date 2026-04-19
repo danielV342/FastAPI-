@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy_utils.types import ChoiceType
 
 # cria a conecao com o banco
-db = create_engine("sqlite:///banco.db") 
+db = create_engine("sqlite:///banco.db")
 
 # cria a base de dados do b
 Base = declarative_base()
@@ -19,9 +19,9 @@ class Usuario(Base):
     email = Column("email", String)
     senha = Column("senha", String)
     ativo = Column("ativo", Boolean)
-    admin = Column("admin", Boolean, default=False)
+    admin = Column("admin", Boolean)
 
-    def __int__(self, nome, email, senha, ativo=True, admin=False):
+    def __init__(self, nome, email, senha, ativo=True, admin=False):
         self.nome  = nome
         self.email = email
         self.senha = senha
@@ -33,15 +33,15 @@ class Usuario(Base):
 class Pedido(Base):
     __tablename__ = "pedidos"
 
-    STATUS_PEDIDOS = (
-        ("PENDENTE", "PENDENTE"),
-        ("CANCELADO", "CANCELADO"),
-        ("FINALIZADO", "FINALIZADO")
-    )
+    # STATUS_PEDIDOS = (
+    #     ("PENDENTE", "PENDENTE"),
+    #     ("CANCELADO", "CANCELADO"),
+    #     ("FINALIZADO", "FINALIZADO")
+    # )
 
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
-    status  = Column("status", ChoiceType(STATUS_PEDIDOS)) #pendente, cancelado, finalizado
+    status  = Column("status", String) #pendente, cancelado, finalizado
     usuario = Column("usuario", ForeignKey("usuarios.id"))
     preco   = Column("preco", Float)
 
@@ -66,4 +66,4 @@ class ItemPedido(Base):
         self.sabor          = sabor
         self.tamanho        = tamanho
         self.preco_unitario = preco_unitario
-        self.pedido         = pedido 
+        self.pedido         = pedido
