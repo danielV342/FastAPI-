@@ -6,6 +6,12 @@ from models import Pedido
 
 order_router = APIRouter(prefix="/orders", tags=["orders"])
 
+def criar_token(id_usuario):
+    token = f"klsdmfknsjfkjdh{id_usuario}"
+    return token
+
+
+
 @order_router.get("/")
 async def pedidos():
     """
@@ -19,3 +25,4 @@ async def criar_pedido(pedido_schema: PedidoSchema, session: Session = Depends(p
     session.add(novo_pedido)
     session.commit()
     return {"mensagem": f"Pedido criado com sucesso. ID do pedido {novo_pedido.id}"}
+
