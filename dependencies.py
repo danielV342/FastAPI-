@@ -1,13 +1,10 @@
 from models import db
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-
 from models import db, Usuario
 from config import SECRET_KEY, ALGORITHM
-
-
+from security import oauth2_schema
 
 def pegar_sessao():
     try:
@@ -17,26 +14,13 @@ def pegar_sessao():
     finally:
         session.close( )
 
-#esquema de autenticacao
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-def verificar_token(
-        token: str = Depends(oauth2_scheme),
-        session: Session = Depends(pegar_sessao)
-): 
+def verificar_token(token: str = Depends(oauth2_schema), session: Session = Depends(pegar_sessao)):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        id_usuario = payload.get("sub")
-
-        if id_usuario is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
-
-        usuario = session.query(Usuario).filter(usuario.id == int(id_usuario)).first()
-
-        if usuario is None:
-            raise HTTPException(status_code=401, detail="Usuário não encontrado")
-
-        return usuario
-    
+        dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        id_usuario = dic_info.get("sub")
     except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
+        raise HTTPException(status_code=401, detail="Acesso Negado, verifique a validade do token")
+    usuario = session.query(Usuario).filter(Usuario.id==id_usuario).first()
+    if not usuario: 
+        raise HTTPException(status_code=401, detail="Acesso Inválido")
+    return usuario
