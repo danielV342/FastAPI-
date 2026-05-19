@@ -35,24 +35,42 @@ async def auth():
     return {"mensagem": "Voce acessou a rota padrao de autenticacao", "autenticado": False}
 
 @auth_router.post("/criar_conta")
-async def criar_conta(usuario_schema: UsuarioSchema, session = Depends(pegar_sessao)):
+async def criar_conta(
+    usuario_schema: UsuarioSchema, 
+    session = Depends(pegar_sessao)
+):
     usuario = session.query(Usuario).filter(Usuario.email==usuario_schema.email).first()
+
     if usuario: 
         raise HTTPException(status_code=400, detail="E-mail do usuário já cadastrado")
-        #já existe um usuário
+
     else:
         senha_criptografada = bcrypt_context.hash(usuario_schema.senha)
-        novo_usuario = Usuario(usuario_schema.nome, usuario_schema.email, senha_criptografada, usuario_schema.ativo, usuario_schema.admin)
+        novo_usuario = Usuario(
+            usuario_schema.nome, 
+            usuario_schema.email, 
+            senha_criptografada, 
+            usuario_schema.ativo, 
+            usuario_schema.admin)
+        
         session.add(novo_usuario)
         session.commit()
+
         return {"mensagem": f"Usuário cadastrado com sucesso {usuario_schema.email}"}
 
 
 @auth_router.post("/login")
-async def login(login_schema: LoginSchema, session: Session = Depends(pegar_sessao)):
-    usuario = autenticar_usuario(login_schema.email, login_schema.senha, session)
+async def login(
+    login_schema: LoginSchema, 
+    session: Session = Depends(pegar_sessao)
+):
+    usuario = autenticar_usuario(
+        login_schema.email, 
+        login_schema.senha, session
+    )
     if not usuario:
         raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas")
+    
     else:
         access_token = criar_token(usuario.id)
         refresh_token = criar_token(usuario.id, duracao_token=timedelta(days=7))
@@ -63,10 +81,18 @@ async def login(login_schema: LoginSchema, session: Session = Depends(pegar_sess
         } 
     
 @auth_router.post("/login-form")
-async def login_form(dados_formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(pegar_sessao)):
-    usuario = autenticar_usuario(dados_formulario.username, dados_formulario.password, session)
+async def login_form(
+    dados_formulario: OAuth2PasswordRequestForm = Depends(), 
+    session: Session = Depends(pegar_sessao)
+):
+    usuario = autenticar_usuario(
+        dados_formulario.username, 
+        dados_formulario.password, 
+        session
+    )
     if not usuario:
         raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas")
+    
     else:
         access_token = criar_token(usuario.id)
         return {
@@ -74,7 +100,6 @@ async def login_form(dados_formulario: OAuth2PasswordRequestForm = Depends(), se
             "token_type": "Bearer"
         } 
     
-
 @auth_router.get("/refresh")
 async def user_refresh_token(usuario: Usuario = Depends(verificar_token)):
     access_token = criar_token(usuario.id)
